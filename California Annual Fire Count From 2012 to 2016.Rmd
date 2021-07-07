@@ -1,0 +1,263 @@
+---
+title: "California Annual Fires From 2012 to 2016"
+author: "Hanh Ngyuen and Kim Santos"
+output: html_document
+---
+
+# Introduction
+This project takes a look into the years 2012-2016 of California's wild fires and is broken into three sections to investigate the annual yearly fires, climate change and yearly burned acres through descriptive and inferential statistics.
+
+
+### **Yearly Fires From 2012 to 2016**
+The 'Fires Yearly' data set was created by collecting information from the California Government Cal Fires website. The values from the following two links were merged by taking the average of the two values of each year from 2012 to 2016.
+
+http://cdfdata.fire.ca.gov/incidents/incidents_statsevents
+
+http://calfire.ca.gov/downloads/redbooks/2015_Redbook/2015_Redbook_Graphs-Charts.pdf
+
+
+```{r}
+setwd("~/Excel Documents")
+library("readxl")
+fire <- read_excel("Fires Yearly.xlsx")
+head(fire)
+```
+
+<br />
+
+#### **A.**  We will calculate the mean of the total fires from the years 2012-2016 in order to get an idea what the fire average occurred in the past 5 years.
+
+```{r}
+yearly_fires <- c(2922, 3672, 2920, 4187, 5762)
+mean(yearly_fires)
+```
+<br />
+
+#### **B.** In case outliers were used when calculating the mean, the median can help determine a more decisive answer. The outliers can influence the results whereas the median has a less likely chance to have outliers.
+
+```{r}
+median(yearly_fires)
+```
+<br />
+
+#### **C.** The standard deviation will provide results on 5 random vectors that deviate away from the mean that was calculated. The intervals of the vectors are [-2000,2000], [-3000, 3000], [-4000, 4000], [-5000, 5000] and [-6000, 6000]
+
+```{r}
+library("ggplot2")
+N <- 5
+
+g1 <- runif(N, 0, 2000)
+g2 <- runif(N, 0, 3000)
+g3 <- runif(N, 0, 4000)
+g4 <- runif(N, 0, 5000)
+g5 <- runif(N, 0, 6000)
+
+sd1 <- sd(g1)
+sd2 <- sd(g2)
+sd3 <- sd(g3)
+sd4 <- sd(g4)
+sd5 <- sd(g5)
+
+
+df1 <- data.frame(g1, sd1, "2012")
+df2 <- data.frame(g2, sd2, "2013")
+df3 <- data.frame(g3, sd3, "2014")
+df4 <- data.frame(g4, sd4, "2015")
+df5 <- data.frame(g5, sd5, "2016")
+
+names(df1) <- c("xdata", "standard_deviations", "Year")
+names(df2) <- c("xdata", "standard_deviations", "Year")
+names(df3) <- c("xdata", "standard_deviations", "Year")
+names(df4) <- c("xdata", "standard_deviations", "Year")
+names(df5) <- c("xdata", "standard_deviations", "Year")
+main_df <- rbind(df1, df2, df3, df4, df5)
+
+ggplot(main_df, aes(x = xdata, y = standard_deviations, color = Year)) +
+  geom_jitter() +
+  xlab("Number of fires")
+```
+
+<br />
+<br />
+
+### **Climate Change**
+
+The 'Climate Change' data set was collected from the official National Centers of Environmental Information website. Recordings of the the annual average California surface temperature can be found here:
+
+https://www.ncdc.noaa.gov/cag/time-series/us/4/0/tavg/ytd/12/2012-2017?base_prd=true&firstbaseyear=2012&lastbaseyear=2017
+
+This section will analyze how California's climate has changed in the past 5 years.
+
+```{r}
+setwd("~/Excel Documents")
+climate_change <- read_excel("climate change.xlsx")
+head(climate_change)
+```
+
+<br />
+
+#### **A.** The correlation in climate change can show the association between the temperatures and years
+```{r}
+cor(climate_change$Year, climate_change$`Temperature ˚F`)
+```
+<br />
+
+#### **B.** Average Annual California Temperatures Graph using regression.
+```{r}
+library("ggplot2")
+baseplot <- ggplot(climate_change, aes(x = Year , y = `Temperature ˚F`)) +
+  geom_point(aes(color = Year, size = Year)) +
+  geom_label(aes(label = `Temperature ˚F`), vjust = 1.5) +
+  ggtitle("Average Annual California Temperatures") +
+  ylab("Temperature (in ˚F)")
+
+#regression line
+baseplot +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_bw(); #removes gray background
+```
+<br/ >
+
+#### **C.** Annual Number of Fires in California Graph using the regression line.
+```{r}
+ library("ggplot2")
+baseplot <- ggplot(fire, aes(x = Year, y = Fires)) +
+  geom_point(aes(color = Year)) +
+  geom_label(aes(label = Year), vjust = 1.5) +
+  ggtitle("Annual Number of Fires in California") +
+  ylab("Number of Fires")
+#regression line
+baseplot +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw()
+```
+
+From the regression lines of the graphs “Annual Number of Fires in California” and “Average Annual California Temperatures”, it can be seen that both are increasing. Therefore, we can say that the correlation of rising temperatures and increase in fires are directly proportionate to each other.
+
+<br />
+
+#### **Doing Geometric Distribution.**
+
+##### Define p of the chance of a cool day in a randomly day in Los Angeles
+
+```{r}
+p <- 140 / 365
+```
+
+<br />
+
+##### What is the probability of at most a week of hot days before cool days? Compute probability and graph probability mass function. (“bars” from n=0 to n=7)
+
+```{r}
+library("ggplot2")
+kvals <- 0:7
+
+pmf <- dgeom(kvals, p)
+tf <- kvals ==7
+
+df <- data.frame(kvals, pmf, tf)
+
+ggplot(df, aes(x = kvals, y = pmf, fill = tf)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Probability Mass Function Hot Days a Week") +
+  xlab("Days") +
+  ylab("Probability Hot Days")
+```
+
+
+There is a much higher chance of there being more hot days than cool days a week, and this can be seen as a indicator of the increase of the average temperature due to climate change.
+
+<br />
+<br />
+
+### **Acres Burned Yearly**
+The 'Acres Burned Yearly' data set was collected from the official California Government Cal Fires website. The values from these two links were merged by taking the average of the two values.
+http://cdfdata.fire.ca.gov/incidents/incidents_statsevents http://calfire.ca.gov/downloads/redbooks/2015_Redbook/2015_Redbook_Graphs-Charts.pdf
+
+```{r}
+setwd("~/Excel Documents")
+acres_burned <- read_excel("acres burned yearly.xlsx")
+head(acres_burned)
+```
+
+<br />
+
+#### Regression line with standard errors
+
+```{r}
+baseplot <- ggplot(acres_burned, aes(x = Year, y = `Acres Burned`)) +
+ geom_point(aes(color = `Acres Burned`, size = `Acres Burned`)) +
+ geom_label(aes(label = Year), vjust = 1.5) +
+ ggtitle("Acres Burned per year") +
+ ylab("damages") +
+ xlab("Year")
+
+baseplot +
+ geom_smooth(method = "lm", se = FALSE)
+
+
+baseplot +
+ geom_smooth(method = "lm", se = TRUE) +
+ theme_bw() #removes gray background
+```
+
+
+It is observed with the trendline on this graph that the acres burned yearly due to fires has increased between 2012-2016.
+
+<br />
+
+#### Calculating acres burned yearly.
+
+```{r}
+acres_burned <- c(128956, 114473, 163067, 299421, 196796)
+mean(acres_burned)
+```
+<br />
+
+#### Confidence intervals
+
+Here we building N=20 confidence intervals with 95% confidence from samples from the U(0,1) uniform distribution (where the population mage is μ=128956). During the simulation, we can count how many of the confidence intervals contain the population mean.
+
+
+```{r}
+# Constants
+confidence <- 95
+alpha <- 1 - confidence/100
+mu <- mean(acres_burned) #population mean
+n <-  4#sample size
+N <- 20 #number of iterations
+
+# Base plot
+plot(c(1,N), c(0, 1),
+    col = "white",
+    main = "95% Confidence Intervals",
+    xlab = "interval",
+    ylab = "values from U(0,1) distribution")
+
+# This vector will collect TRUE/FALSE values about containing the population mean
+CI_tracker <- rep(TRUE, N)
+
+# For Loop
+for(i in 1:N){
+ this_sample <- runif(n)
+ xbar <- mean(this_sample)
+ s <- sd(this_sample)
+
+ #margin of error
+ E <- qt(1 - alpha/2, df = n - 1)*s/sqrt(n)
+
+ #confidence interval
+ low <- xbar - E
+ high <- xbar + E
+
+ #plotting elements
+ lines(c(i,i), c(low, high), col = "blue")
+ points(i, low,  col = "red", pch = 6)
+ points(i, high, col = "red", pch = 2)
+
+ #Finally, we check if the current confidence interval
+ #contains the true population mean
+ CI_tracker[i] <- low < mu && mu < high
+}
+```
+
